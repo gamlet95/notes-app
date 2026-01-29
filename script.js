@@ -29,7 +29,7 @@ const loadingIndicator = document.getElementById('loadingIndicator');
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     setupEventListeners();
-    loadNotesFromAPI();
+    loadNotesFromAPI(true); // Show loading only on initial load
     startPolling();
 });
 
@@ -53,9 +53,12 @@ function toggleTheme() {
 // ==================== API FUNCTIONS ====================
 
 // Load notes from API
-async function loadNotesFromAPI() {
+async function loadNotesFromAPI(showIndicator = false) {
     try {
-        showLoading();
+        // Only show loading on initial load
+        if (showIndicator) {
+            showLoading();
+        }
         
         const response = await fetch(API_URL);
         const data = await response.json();
@@ -70,7 +73,9 @@ async function loadNotesFromAPI() {
     } catch (error) {
         console.error('Error loading notes:', error);
     } finally {
-        hideLoading();
+        if (showIndicator) {
+            hideLoading();
+        }
     }
 }
 
@@ -109,7 +114,7 @@ function saveNotesToAPI() {
 function startPolling() {
     pollTimer = setInterval(() => {
         if (!isUpdating && !draggedNote) {
-            loadNotesFromAPI();
+            loadNotesFromAPI(false); // Silent background sync
         }
     }, POLL_INTERVAL);
 }
