@@ -1,1 +1,214 @@
+/* style.css */
 
+/* CSS Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    
+    /* Warm gradient background */
+    background: linear-gradient(135deg, 
+        #fff5e6 0%, 
+        #ffe4cc 25%, 
+        #ffd4b3 50%, 
+        #ffcba3 75%, 
+        #ffc299 100%
+    );
+    background-attachment: fixed;
+}
+
+/* Floating add button */
+.add-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    
+    /* Glassmorphism effect */
+    background: rgba(255, 153, 102, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    
+    box-shadow: 0 8px 32px rgba(255, 120, 50, 0.2);
+    
+    font-size: 32px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.add-btn:hover {
+    transform: scale(1.1);
+    background: rgba(255, 153, 102, 0.5);
+    box-shadow: 0 12px 40px rgba(255, 120, 50, 0.3);
+}
+
+.add-btn:active {
+    transform: scale(0.95);
+}
+
+/* Notes container */
+#notesContainer {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Individual note card */
+.note-card {
+    position: absolute;
+    min-width: 200px;
+    min-height: 150px;
+    padding: 15px;
+    border-radius: 16px;
+    
+    /* Glassmorphism effect */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(255, 153, 102, 0.15);
+    
+    cursor: move;
+    transition: all 0.3s ease-in-out;
+    
+    /* For resize handle */
+    resize: both;
+    overflow: auto;
+    
+    /* Animation */
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.note-card:hover {
+    box-shadow: 0 12px 40px rgba(255, 153, 102, 0.25);
+}
+
+/* Selected state */
+.note-card.selected {
+    border: 2px solid rgba(255, 120, 50, 0.6);
+    box-shadow: 0 12px 48px rgba(255, 120, 50, 0.3);
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* Textarea inside note card */
+.note-card textarea {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    resize: none;
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+    color: #5c4033;
+    line-height: 1.6;
+}
+
+.note-card textarea::placeholder {
+    color: rgba(92, 64, 51, 0.5);
+}
+
+/* Floating delete button */
+.delete-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 110px;
+    padding: 12px 24px;
+    border-radius: 24px;
+    border: none;
+    
+    /* Glassmorphism effect */
+    background: rgba(255, 102, 102, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    
+    box-shadow: 0 8px 32px rgba(255, 80, 80, 0.2);
+    
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.delete-btn:hover {
+    transform: scale(1.05);
+    background: rgba(255, 102, 102, 0.5);
+    box-shadow: 0 12px 40px rgba(255, 80, 80, 0.3);
+}
+
+.delete-btn:active {
+    transform: scale(0.95);
+}
+
+.delete-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Resize handle visual cue */
+.note-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, transparent 50%, rgba(255, 153, 102, 0.3) 50%);
+    border-bottom-right-radius: 16px;
+    cursor: nwse-resize;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .add-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 28px;
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .delete-btn {
+        bottom: 20px;
+        right: 90px;
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+    
+    .note-card {
+        min-width: 150px;
+        min-height: 120px;
+        padding: 12px;
+    }
+    
+    .note-card textarea {
+        font-size: 13px;
+    }
+}
