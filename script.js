@@ -1,5 +1,10 @@
 // script.js
 
+// API configuration
+const API_URL = 'https://script.google.com/macros/s/AKfycbzDn80pJqkqY1kf0fFqsb8rY4DVwJN79ztZgfhBLjkG9w7GYZZUd8aaF_wmkPIfue5a-A/exec';
+const POLL_INTERVAL = 5000; // Poll every 5 seconds
+const DEBOUNCE_DELAY = 1000; // Debounce save by 1 second
+
 // Global variables
 let notes = [];
 let selectedNoteId = null;
@@ -7,76 +12,265 @@ let draggedNote = null;
 let offsetX = 0;
 let offsetY = 0;
 let longPressTimer = null;
-const LONG_PRESS_DURATION = 500; // milliseconds
+let pollTimer = null;
+let saveDebounceTimer = null;
+let isUpdating = false;
+
+const LONG_PRESS_DURATION = 500;
 
 // DOM elements
 const addNoteBtn = document.getElementById('addNoteBtn');
 const deleteBtn = document.getElementById('deleteBtn');
 const notesContainer = document.getElementById('notesContainer');
+const themeToggle = document.getElementById('themeToggle');
+const loadingIndicator = document.getElementById('loadingIndicator');
 
 // Initialize app on load
 document.addEventListener('DOMContentLoaded', () => {
-    loadNotesFromStorage();
-    renderNotes();
+    initTheme();
     setupEventListeners();
+    loadNotesFromAPI();
+    startPolling();
 });
 
-// Setup event listeners for main buttons
-function setupEventListeners() {
-    addNoteBtn.addEventListener('click', createNewNote);
-    deleteBtn.addEventListener('click', deleteSelectedNote);
+// ==================== THEME MANAGEMENT ====================
+
+// Initialize theme from localStorage
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'day';
+    document.documentElement.setAttribute('data-theme', savedTheme);
 }
 
-// Load notes from localStorage
-function loadNotesFromStorage() {
-    const storedNotes = localStorage.getItem('notes');
-    if (storedNotes) {
-        try {
-            notes = JSON.parse(storedNotes);
-        } catch (e) {
-            console.error('Error loading notes:', e);
-            notes = [];
+// Toggle between day and night themes
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'day' ? 'night' : 'day';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
+// ==================== API FUNCTIONS ====================
+
+// Load notes from API
+async function loadNotesFromAPI() {
+    try {
+        showLoading();
+        
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        if (data.notes && Array.isArray(data.notes)) {
+            // Only update if there are actual changes to avoid flicker
+            if (JSON.stringify(notes) !== JSON.stringify(data.notes)) {
+                notes = data.notes;
+                renderNotes();
+            }
         }
+    } catch (error) {
+        console.error('Error loading notes:', error);
+    } finally {
+        hideLoading();
     }
 }
 
-// Save notes to localStorage
-function saveNotesToStorage() {
-    localStorage.setItem('notes', JSON.stringify(notes));
+// Save notes to API with debounce
+function saveNotesToAPI() {
+    // Clear existing debounce timer
+    if (saveDebounceTimer) {
+        clearTimeout(saveDebounceTimer);
+    }
+    
+    // Set new debounce timer
+    saveDebounceTimer = setTimeout(async () => {
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ notes: notes })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                console.log('Notes saved successfully');
+            }
+        } catch (error) {
+            console.error('Error saving notes:', error);
+        }
+    }, DEBOUNCE_DELAY);
 }
 
-// Generate unique ID for each note
+// ==================== POLLING ====================
+
+// Start polling for updates
+function startPolling() {
+    pollTimer = setInterval(() => {
+        if (!isUpdating && !draggedNote) {
+            loadNotesFromAPI();
+        }
+    }, POLL_INTERVAL);
+}
+
+// Stop polling
+function stopPolling() {
+    if (pollTimer) {
+        clearInterval(pollTimer);
+    }
+}
+
+// ==================== UI HELPERS ====================
+
+// Show loading indicator
+function showLoading() {
+    loadingIndicator.classList.remove('hidden');
+}
+
+// Hide loading indicator
+function hideLoading() {
+    loadingIndicator.classList.add('hidden');
+}
+
+// ==================== EVENT LISTENERS ====================
+
+// Setup main event listeners
+function setupEventListeners() {
+    addNoteBtn.addEventListener('click', createNewNote);
+    deleteBtn.addEventListener('click', deleteSelectedNote);
+    themeToggle.addEventListener('click', toggleTheme);
+}
+
+// ==================== NOTE MANAGEMENT ====================
+
+// Generate unique ID
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-// Create a new note
+// Create new note
 function createNewNote() {
+    isUpdating = true;
+    
     const newNote = {
         id: generateId(),
         content: '',
-        x: Math.random() * (window.innerWidth - 250) + 20,
-        y: Math.random() * (window.innerHeight - 200) + 20,
-        width: 250,
+        x: Math.random() * (window.innerWidth - 300) + 50,
+        y: Math.random() * (window.innerHeight - 250) + 50,
+        width: 260,
         height: 200
     };
     
     notes.push(newNote);
-    saveNotesToStorage();
     renderNotes();
+    saveNotesToAPI();
+    
+    isUpdating = false;
 }
 
-// Render all notes to the DOM
-function renderNotes() {
-    notesContainer.innerHTML = '';
+// Delete selected note
+function deleteSelectedNote() {
+    if (!selectedNoteId) return;
     
+    isUpdating = true;
+    
+    // Remove from array
+    notes = notes.filter(n => n.id !== selectedNoteId);
+    
+    // Re-render and save
+    renderNotes();
+    saveNotesToAPI();
+    
+    // Hide delete button
+    selectedNoteId = null;
+    deleteBtn.classList.add('hidden');
+    
+    isUpdating = false;
+}
+
+// Update note content
+function updateNoteContent(id, content) {
+    const note = notes.find(n => n.id === id);
+    if (note) {
+        note.content = content;
+        saveNotesToAPI();
+    }
+}
+
+// Update note position
+function updateNotePosition(id, x, y) {
+    const note = notes.find(n => n.id === id);
+    if (note) {
+        note.x = x;
+        note.y = y;
+        saveNotesToAPI();
+    }
+}
+
+// Update note size
+function updateNoteSize(id, width, height) {
+    const note = notes.find(n => n.id === id);
+    if (note) {
+        note.width = width;
+        note.height = height;
+        saveNotesToAPI();
+    }
+}
+
+// Select a note
+function selectNote(id) {
+    // Deselect previous
+    if (selectedNoteId) {
+        const prevSelected = document.querySelector(`[data-id="${selectedNoteId}"]`);
+        if (prevSelected) {
+            prevSelected.classList.remove('selected');
+        }
+    }
+    
+    // Select new note
+    selectedNoteId = id;
+    const noteCard = document.querySelector(`[data-id="${id}"]`);
+    if (noteCard) {
+        noteCard.classList.add('selected');
+        deleteBtn.classList.remove('hidden');
+    }
+}
+
+// ==================== RENDERING ====================
+
+// Render all notes to DOM
+function renderNotes() {
+    // Get current notes in DOM
+    const existingNotes = Array.from(notesContainer.querySelectorAll('.note-card'));
+    const existingIds = existingNotes.map(note => note.dataset.id);
+    const newIds = notes.map(note => note.id);
+    
+    // Remove notes that no longer exist
+    existingNotes.forEach(noteEl => {
+        if (!newIds.includes(noteEl.dataset.id)) {
+            noteEl.remove();
+        }
+    });
+    
+    // Add or update notes
     notes.forEach(note => {
-        const noteCard = createNoteElement(note);
-        notesContainer.appendChild(noteCard);
+        let noteCard = document.querySelector(`[data-id="${note.id}"]`);
+        
+        if (!noteCard) {
+            // Create new note element
+            noteCard = createNoteElement(note);
+            notesContainer.appendChild(noteCard);
+        } else {
+            // Update existing note (only if not being dragged)
+            if (draggedNote !== noteCard) {
+                updateNoteElement(noteCard, note);
+            }
+        }
     });
 }
 
-// Create a note DOM element
+// Create note DOM element
 function createNoteElement(note) {
     const noteCard = document.createElement('div');
     noteCard.className = 'note-card';
@@ -105,13 +299,33 @@ function createNoteElement(note) {
     
     noteCard.appendChild(textarea);
     
-    // Setup drag and long press events
+    // Setup interactions
     setupNoteInteractions(noteCard, note);
     
     return noteCard;
 }
 
-// Setup drag, long press, and resize for a note
+// Update existing note element
+function updateNoteElement(noteCard, note) {
+    const textarea = noteCard.querySelector('textarea');
+    
+    // Update content if changed (and textarea not focused)
+    if (textarea && textarea !== document.activeElement) {
+        if (textarea.value !== note.content) {
+            textarea.value = note.content;
+        }
+    }
+    
+    // Update position
+    noteCard.style.left = `${note.x}px`;
+    noteCard.style.top = `${note.y}px`;
+    
+    // Update size
+    noteCard.style.width = `${note.width}px`;
+    noteCard.style.height = `${note.height}px`;
+}
+
+// Setup note interactions (drag, long press, resize)
 function setupNoteInteractions(noteCard, note) {
     // Pointer down - start drag or long press
     noteCard.addEventListener('pointerdown', (e) => {
@@ -132,10 +346,11 @@ function setupNoteInteractions(noteCard, note) {
         offsetY = e.clientY - noteCard.offsetTop;
         
         noteCard.style.cursor = 'grabbing';
+        isUpdating = true;
     });
     
     // Pointer move - drag note
-    document.addEventListener('pointermove', (e) => {
+    const pointerMoveHandler = (e) => {
         if (draggedNote === noteCard) {
             // Cancel long press if moving
             clearTimeout(longPressTimer);
@@ -150,18 +365,22 @@ function setupNoteInteractions(noteCard, note) {
                 updateNotePosition(note.id, newX, newY);
             });
         }
-    });
+    };
     
     // Pointer up - end drag
-    document.addEventListener('pointerup', () => {
+    const pointerUpHandler = () => {
         if (draggedNote === noteCard) {
             clearTimeout(longPressTimer);
             draggedNote = null;
             noteCard.style.cursor = 'move';
+            isUpdating = false;
         }
-    });
+    };
     
-    // Track resize
+    document.addEventListener('pointermove', pointerMoveHandler);
+    document.addEventListener('pointerup', pointerUpHandler);
+    
+    // Track resize with ResizeObserver
     const resizeObserver = new ResizeObserver(entries => {
         for (let entry of entries) {
             const { width, height } = entry.contentRect;
@@ -172,66 +391,9 @@ function setupNoteInteractions(noteCard, note) {
     resizeObserver.observe(noteCard);
 }
 
-// Update note content
-function updateNoteContent(id, content) {
-    const note = notes.find(n => n.id === id);
-    if (note) {
-        note.content = content;
-        saveNotesToStorage();
-    }
-}
+// ==================== CLEANUP ====================
 
-// Update note position
-function updateNotePosition(id, x, y) {
-    const note = notes.find(n => n.id === id);
-    if (note) {
-        note.x = x;
-        note.y = y;
-        saveNotesToStorage();
-    }
-}
-
-// Update note size
-function updateNoteSize(id, width, height) {
-    const note = notes.find(n => n.id === id);
-    if (note) {
-        note.width = width;
-        note.height = height;
-        saveNotesToStorage();
-    }
-}
-
-// Select a note
-function selectNote(id) {
-    // Deselect previous
-    if (selectedNoteId) {
-        const prevSelected = document.querySelector(`[data-id="${selectedNoteId}"]`);
-        if (prevSelected) {
-            prevSelected.classList.remove('selected');
-        }
-    }
-    
-    // Select new note
-    selectedNoteId = id;
-    const noteCard = document.querySelector(`[data-id="${id}"]`);
-    if (noteCard) {
-        noteCard.classList.add('selected');
-        deleteBtn.classList.remove('hidden');
-    }
-}
-
-// Delete selected note
-function deleteSelectedNote() {
-    if (!selectedNoteId) return;
-    
-    // Remove from array
-    notes = notes.filter(n => n.id !== selectedNoteId);
-    
-    // Save and re-render
-    saveNotesToStorage();
-    renderNotes();
-    
-    // Hide delete button
-    selectedNoteId = null;
-    deleteBtn.classList.add('hidden');
-}
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    stopPolling();
+});
