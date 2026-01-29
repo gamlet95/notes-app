@@ -1,6 +1,70 @@
 /* style.css */
 
-/* CSS Reset and base styles */
+/* Import custom fonts for distinctive typography */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=DM+Sans:wght@400;500;700&display=swap');
+
+/* CSS Variables for theming */
+:root {
+    /* Day mode colors */
+    --bg-gradient-start: #fff5e6;
+    --bg-gradient-mid: #ffe4cc;
+    --bg-gradient-end: #ffc299;
+    
+    --card-bg: rgba(255, 255, 255, 0.28);
+    --card-border: rgba(255, 255, 255, 0.45);
+    --card-shadow: rgba(255, 153, 102, 0.15);
+    --card-hover-shadow: rgba(255, 153, 102, 0.28);
+    --card-selected-border: rgba(255, 120, 50, 0.7);
+    --card-selected-shadow: rgba(255, 120, 50, 0.35);
+    --card-selected-bg: rgba(255, 255, 255, 0.4);
+    
+    --text-color: #5c4033;
+    --text-placeholder: rgba(92, 64, 51, 0.5);
+    
+    --btn-primary-bg: rgba(255, 153, 102, 0.35);
+    --btn-primary-hover: rgba(255, 153, 102, 0.55);
+    --btn-primary-shadow: rgba(255, 120, 50, 0.25);
+    
+    --btn-delete-bg: rgba(255, 102, 102, 0.35);
+    --btn-delete-hover: rgba(255, 102, 102, 0.55);
+    --btn-delete-shadow: rgba(255, 80, 80, 0.25);
+    
+    --theme-toggle-bg: rgba(255, 255, 255, 0.3);
+    --theme-toggle-hover: rgba(255, 255, 255, 0.5);
+    --theme-toggle-icon: #ff9966;
+}
+
+/* Night mode colors */
+[data-theme="night"] {
+    --bg-gradient-start: #1a1a2e;
+    --bg-gradient-mid: #25274d;
+    --bg-gradient-end: #2e3856;
+    
+    --card-bg: rgba(255, 255, 255, 0.08);
+    --card-border: rgba(255, 255, 255, 0.12);
+    --card-shadow: rgba(0, 0, 0, 0.3);
+    --card-hover-shadow: rgba(0, 0, 0, 0.45);
+    --card-selected-border: rgba(120, 180, 255, 0.6);
+    --card-selected-shadow: rgba(120, 180, 255, 0.3);
+    --card-selected-bg: rgba(255, 255, 255, 0.12);
+    
+    --text-color: #e8e6e3;
+    --text-placeholder: rgba(232, 230, 227, 0.4);
+    
+    --btn-primary-bg: rgba(120, 180, 255, 0.25);
+    --btn-primary-hover: rgba(120, 180, 255, 0.4);
+    --btn-primary-shadow: rgba(100, 160, 255, 0.3);
+    
+    --btn-delete-bg: rgba(255, 102, 102, 0.25);
+    --btn-delete-hover: rgba(255, 102, 102, 0.4);
+    --btn-delete-shadow: rgba(255, 80, 80, 0.3);
+    
+    --theme-toggle-bg: rgba(255, 255, 255, 0.1);
+    --theme-toggle-hover: rgba(255, 255, 255, 0.18);
+    --theme-toggle-icon: #78b4ff;
+}
+
+/* Reset and base */
 * {
     margin: 0;
     padding: 0;
@@ -8,55 +72,119 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     overflow: hidden;
     width: 100vw;
     height: 100vh;
     position: relative;
     
-    /* Warm gradient background */
+    /* Gradient background with smooth transition */
     background: linear-gradient(135deg, 
-        #fff5e6 0%, 
-        #ffe4cc 25%, 
-        #ffd4b3 50%, 
-        #ffcba3 75%, 
-        #ffc299 100%
+        var(--bg-gradient-start) 0%, 
+        var(--bg-gradient-mid) 50%, 
+        var(--bg-gradient-end) 100%
     );
     background-attachment: fixed;
+    
+    /* Smooth theme transition */
+    transition: background 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    
+    background: var(--theme-toggle-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    
+    box-shadow: 0 4px 16px var(--btn-primary-shadow);
+    
+    color: var(--theme-toggle-icon);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1001;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.08) rotate(10deg);
+    background: var(--theme-toggle-hover);
+    box-shadow: 0 6px 24px var(--btn-primary-shadow);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Sun and moon icon visibility */
+.sun-icon,
+.moon-icon {
+    position: absolute;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sun-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.moon-icon {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+}
+
+[data-theme="night"] .sun-icon {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+}
+
+[data-theme="night"] .moon-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
 }
 
 /* Floating add button */
 .add-btn {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 60px;
-    height: 60px;
+    bottom: 32px;
+    right: 32px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     border: none;
     
-    /* Glassmorphism effect */
-    background: rgba(255, 153, 102, 0.3);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: var(--btn-primary-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     
-    box-shadow: 0 8px 32px rgba(255, 120, 50, 0.2);
+    box-shadow: 0 8px 32px var(--btn-primary-shadow);
     
-    font-size: 32px;
+    font-size: 34px;
+    font-weight: 300;
     color: #fff;
     cursor: pointer;
-    transition: all 0.3s ease-in-out;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1000;
 }
 
 .add-btn:hover {
-    transform: scale(1.1);
-    background: rgba(255, 153, 102, 0.5);
-    box-shadow: 0 12px 40px rgba(255, 120, 50, 0.3);
+    transform: scale(1.12) rotate(90deg);
+    background: var(--btn-primary-hover);
+    box-shadow: 0 12px 48px var(--btn-primary-shadow);
 }
 
 .add-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.92) rotate(90deg);
 }
 
 /* Notes container */
@@ -69,50 +197,50 @@ body {
 /* Individual note card */
 .note-card {
     position: absolute;
-    min-width: 200px;
-    min-height: 150px;
-    padding: 15px;
-    border-radius: 16px;
+    min-width: 220px;
+    min-height: 160px;
+    padding: 18px;
+    border-radius: 18px;
     
-    /* Glassmorphism effect */
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 8px 32px rgba(255, 153, 102, 0.15);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 8px 32px var(--card-shadow);
     
     cursor: move;
-    transition: all 0.3s ease-in-out;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* For resize handle */
     resize: both;
     overflow: auto;
     
-    /* Animation */
-    animation: fadeIn 0.4s ease-in-out;
+    /* Entrance animation */
+    animation: noteAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes fadeIn {
+@keyframes noteAppear {
     from {
         opacity: 0;
-        transform: scale(0.8);
+        transform: scale(0.7) translateY(30px);
     }
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
     }
 }
 
 .note-card:hover {
-    box-shadow: 0 12px 40px rgba(255, 153, 102, 0.25);
+    box-shadow: 0 12px 48px var(--card-hover-shadow);
+    transform: translateY(-2px);
 }
 
 /* Selected state */
 .note-card.selected {
-    border: 2px solid rgba(255, 120, 50, 0.6);
-    box-shadow: 0 12px 48px rgba(255, 120, 50, 0.3);
-    background: rgba(255, 255, 255, 0.35);
+    border: 2px solid var(--card-selected-border);
+    box-shadow: 0 16px 56px var(--card-selected-shadow);
+    background: var(--card-selected-bg);
+    transform: translateY(-4px);
 }
 
 /* Textarea inside note card */
@@ -123,92 +251,168 @@ body {
     background: transparent;
     resize: none;
     outline: none;
-    font-size: 14px;
-    font-family: inherit;
-    color: #5c4033;
-    line-height: 1.6;
+    font-size: 15px;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-weight: 400;
+    color: var(--text-color);
+    line-height: 1.7;
+    transition: color 0.4s ease;
 }
 
 .note-card textarea::placeholder {
-    color: rgba(92, 64, 51, 0.5);
+    color: var(--text-placeholder);
+    font-style: italic;
 }
 
 /* Floating delete button */
 .delete-btn {
     position: fixed;
-    bottom: 30px;
-    right: 110px;
-    padding: 12px 24px;
-    border-radius: 24px;
+    bottom: 32px;
+    right: 116px;
+    padding: 14px 28px;
+    border-radius: 28px;
     border: none;
     
-    /* Glassmorphism effect */
-    background: rgba(255, 102, 102, 0.3);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: var(--btn-delete-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     
-    box-shadow: 0 8px 32px rgba(255, 80, 80, 0.2);
+    box-shadow: 0 8px 32px var(--btn-delete-shadow);
     
     font-size: 14px;
     font-weight: 600;
     color: #fff;
     cursor: pointer;
-    transition: all 0.3s ease-in-out;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1000;
 }
 
 .delete-btn:hover {
-    transform: scale(1.05);
-    background: rgba(255, 102, 102, 0.5);
-    box-shadow: 0 12px 40px rgba(255, 80, 80, 0.3);
+    transform: scale(1.06);
+    background: var(--btn-delete-hover);
+    box-shadow: 0 12px 48px var(--btn-delete-shadow);
 }
 
 .delete-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.94);
 }
 
 .delete-btn.hidden {
     opacity: 0;
     pointer-events: none;
+    transform: scale(0.8);
 }
 
-/* Resize handle visual cue */
+/* Resize handle visual */
 .note-card::after {
     content: '';
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 16px;
-    height: 16px;
-    background: linear-gradient(135deg, transparent 50%, rgba(255, 153, 102, 0.3) 50%);
-    border-bottom-right-radius: 16px;
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, transparent 50%, var(--btn-primary-bg) 50%);
+    border-bottom-right-radius: 18px;
     cursor: nwse-resize;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.note-card:hover::after {
+    opacity: 1;
+}
+
+/* Loading indicator */
+.loading-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2000;
+    
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    
+    border: 1px solid var(--card-border);
+    box-shadow: 0 12px 48px var(--card-shadow);
+    
+    padding: 32px;
+    border-radius: 20px;
+    
+    transition: opacity 0.3s ease;
+}
+
+.loading-indicator.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--card-border);
+    border-top-color: var(--theme-toggle-icon);
+    border-radius: 50%;
+    animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
-    .add-btn {
-        width: 50px;
-        height: 50px;
-        font-size: 28px;
-        bottom: 20px;
+    .theme-toggle {
+        width: 44px;
+        height: 44px;
+        top: 20px;
         right: 20px;
     }
     
+    .add-btn {
+        width: 56px;
+        height: 56px;
+        font-size: 30px;
+        bottom: 24px;
+        right: 24px;
+    }
+    
     .delete-btn {
-        bottom: 20px;
-        right: 90px;
-        padding: 10px 20px;
+        bottom: 24px;
+        right: 96px;
+        padding: 12px 22px;
         font-size: 13px;
     }
     
     .note-card {
-        min-width: 150px;
-        min-height: 120px;
-        padding: 12px;
+        min-width: 180px;
+        min-height: 140px;
+        padding: 14px;
     }
     
     .note-card textarea {
-        font-size: 13px;
+        font-size: 14px;
     }
+}
+
+/* Smooth scrollbar for note cards */
+.note-card::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.note-card::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.note-card::-webkit-scrollbar-thumb {
+    background: var(--card-border);
+    border-radius: 4px;
+}
+
+.note-card::-webkit-scrollbar-thumb:hover {
+    background: var(--card-selected-border);
 }
