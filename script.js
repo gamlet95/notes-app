@@ -1,7 +1,7 @@
 // script.js
 
 // API configuration
-const API_URL = 'https://script.google.com/macros/s/AKfycbzDn80pJqkqY1kf0fFqsb8rY4DVwJN79ztZgfhBLjkG9w7GYZZUd8aaF_wmkPIfue5a-A/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyhA9x4LSyluJcMPz1ZQaHckjm8Rdw85Djo8qrPZlwGdS0jPc30LakHjVtRQ0a8dK3MbA/exec';
 const POLL_INTERVAL = 5000; // Poll every 5 seconds
 const DEBOUNCE_DELAY = 1000; // Debounce save by 1 second
 
