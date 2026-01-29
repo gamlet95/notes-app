@@ -1,7 +1,7 @@
 // script.js
 
 // API configuration
-const API_URL = 'https://script.google.com/macros/s/AKfycbyhA9x4LSyluJcMPz1ZQaHckjm8Rdw85Djo8qrPZlwGdS0jPc30LakHjVtRQ0a8dK3MbA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzFxdHB-YSz3rdI6iOS_kfMqsFC37JX8NdDtyJ1kF_bKgB9IK3dwkaLlqd9lC7YLmg5qA/exec';
 const POLL_INTERVAL = 5000; // Poll every 5 seconds
 const DEBOUNCE_DELAY = 1000; // Debounce save by 1 second
 
@@ -63,11 +63,16 @@ async function loadNotesFromAPI(showIndicator = false) {
         const response = await fetch(API_URL);
         const data = await response.json();
         
+        console.log('API Response:', data); // Debug log
+        
         if (data.notes && Array.isArray(data.notes)) {
-            // Only update if there are actual changes to avoid flicker
-            if (JSON.stringify(notes) !== JSON.stringify(data.notes)) {
-                notes = data.notes;
-                renderNotes();
+            // Don't update if we're currently editing
+            if (!isUpdating && !draggedNote) {
+                // Only update if there are actual changes to avoid flicker
+                if (JSON.stringify(notes) !== JSON.stringify(data.notes)) {
+                    notes = data.notes;
+                    renderNotes();
+                }
             }
         }
     } catch (error) {
@@ -89,6 +94,8 @@ function saveNotesToAPI() {
     // Set new debounce timer
     saveDebounceTimer = setTimeout(async () => {
         try {
+            console.log('Saving notes to API:', notes); // Debug log
+            
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
@@ -98,6 +105,7 @@ function saveNotesToAPI() {
             });
             
             const data = await response.json();
+            console.log('Save response:', data); // Debug log
             
             if (data.status === 'success') {
                 console.log('Notes saved successfully');
@@ -171,7 +179,10 @@ function createNewNote() {
     renderNotes();
     saveNotesToAPI();
     
-    isUpdating = false;
+    // Keep isUpdating true for longer to ensure save completes
+    setTimeout(() => {
+        isUpdating = false;
+    }, 2000);
 }
 
 // Delete selected note
@@ -191,7 +202,10 @@ function deleteSelectedNote() {
     selectedNoteId = null;
     deleteBtn.classList.add('hidden');
     
-    isUpdating = false;
+    // Keep isUpdating true for longer to ensure save completes
+    setTimeout(() => {
+        isUpdating = false;
+    }, 2000);
 }
 
 // Update note content
